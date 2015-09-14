@@ -1,51 +1,46 @@
-# encoding: utf-8
+require "rake"
+require "rake/clean"
 
-require 'rubygems'
-require 'bundler'
-begin
-  Bundler.setup(:default, :development)
-rescue Bundler::BundlerError => e
-  $stderr.puts e.message
-  $stderr.puts "Run `bundle install` to install missing gems"
-  exit e.status_code
-end
-require 'rake'
+CLEAN.include ["sequel-annotate-*.gem", "rdoc"]
 
-require 'jeweler'
-require './lib/annotate-sequel'
-Jeweler::Tasks.new do |gem|
-  # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
-  gem.name = "annotate-sequel"
-  gem.homepage = "http://github.com/kennym/annotate-sequel"
-  gem.license = "MIT"
-  gem.summary = %Q{Annotate Sequel models}
-  gem.description = %Q{Annotate Sequel models}
-  gem.email = "kenny@kennymeyer.net"
-  gem.authors = ["Kenny Meyer"]
-  gem.version = AnnotateSequel::Version::STRING
-  # dependencies defined in Gemfile
-end
-Jeweler::RubygemsDotOrgTasks.new
-
-require 'rspec/core'
-require 'rspec/core/rake_task'
-RSpec::Core::RakeTask.new(:spec) do |spec|
-  spec.pattern = FileList['spec/**/*_spec.rb']
+desc "Build sequel-annotate gem"
+task :package=>[:clean] do |p|
+  sh %{#{FileUtils::RUBY} -S gem build sequel-annotate.gemspec}
 end
 
-RSpec::Core::RakeTask.new(:rcov) do |spec|
-  spec.pattern = 'spec/**/*_spec.rb'
-  spec.rcov = true
+### Specs
+
+desc "Run specs"
+task :spec do
+  sh "#{FileUtils::RUBY} -rubygems -I lib spec/sequel-annotate_spec.rb"
 end
 
 task :default => :spec
 
-require 'rdoc/task'
-Rake::RDocTask.new do |rdoc|
-  version = File.exist?('VERSION') ? File.read('VERSION') : ""
+### RDoc
 
-  rdoc.rdoc_dir = 'rdoc'
-  rdoc.title = "annotate-sequel #{version}"
-  rdoc.rdoc_files.include('README*')
-  rdoc.rdoc_files.include('lib/**/*.rb')
+RDOC_DEFAULT_OPTS = ["--quiet", "--line-numbers", "--inline-source", '--title', 'sequel-annotate: Annotate Sequel models with schema information']
+
+begin
+  gem 'rdoc'
+  gem 'hanna-nouveau'
+  RDOC_DEFAULT_OPTS.concat(['-f', 'hanna'])
+rescue Gem::LoadError
 end
+
+rdoc_task_class = begin
+  require "rdoc/task"
+  RDoc::Task
+rescue LoadError
+  require "rake/rdoctask"
+  Rake::RDocTask
+end
+
+RDOC_OPTS = RDOC_DEFAULT_OPTS + ['--main', 'README.rdoc']
+
+rdoc_task_class.new do |rdoc|
+  rdoc.rdoc_dir = "rdoc"
+  rdoc.options += RDOC_OPTS
+  rdoc.rdoc_files.add %w"README.rdoc CHANGELOG MIT-LICENSE lib/**/*.rb"
+end
+

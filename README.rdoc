@@ -1,62 +1,73 @@
-= annotate-sequel
+= sequel-annotate
 
-A gem to annotate your Sequel models.
+sequel-annotate annotates Sequel models with schema information.  By
+default, it includes information on columns, indexes, and foreign key
+constraints for the current table.
 
-Currently only tested for Rails 3 and only supports Sequel 3.x as of right now.
-Eventually this gem will support Sequel 4.
+On PostgreSQL, this includes more advanced information, including
+check constraints, triggers, and foreign keys constraints for other
+tables that reference the current table.
 
 == Example
 
-The schema comment looks like this:
+The schema comments are kept at the end of the file, using a format similar to:
 
-    # Schema Info
-    # 
-    # Table name: items
-    # 
-    #  id :integer, {:allow_null=>false, :default=>nil, :primary_key=>true, :db_type=>"integer", :ruby_default=>nil}
-    #  name :string, {:allow_null=>true, :default=>nil, :primary_key=>false, :db_type=>"varchar(255)", :ruby_default=>nil}
-    #  price :float, {:allow_null=>true, :default=>nil, :primary_key=>false, :db_type=>"double precision", :ruby_default=>nil}
-    # 
+  class Item < Sequel::Model
+  end
 
-    DB.create_table :items do
-      primary_key :id
-      String :name
-      Float :price
-    end
-
-    class Item < Sequel::Model(:items)
-    end
+  # Table: items
+  # Columns:
+  #  id                    | integer               | PRIMARY KEY DEFAULT nextval('items_id_seq'::regclass)
+  #  category_id           | integer               | NOT NULL
+  #  manufacturer_name     | character varying(50) |
+  #  manufacturer_location | text                  |
+  #  in_stock              | boolean               | DEFAULT false
+  #  name                  | text                  | DEFAULT 'John'::text
+  #  price                 | double precision      | DEFAULT 0
+  # Indexes:
+  #  items_pkey        | PRIMARY KEY btree (id)
+  #  name              | UNIQUE btree (manufacturer_name, manufacturer_location)
+  #  manufacturer_name | btree (manufacturer_name)
+  # Check constraints:
+  #  pos_id | (id > 0)
+  # Foreign key constraints:
+  #  items_category_id_fkey       | (category_id) REFERENCES categories(id)
+  #  items_manufacturer_name_fkey | (manufacturer_name, manufacturer_location) REFERENCES manufacturers(name, location)
+  # Triggers:
+  #  valid_price | BEFORE INSERT OR UPDATE ON items FOR EACH ROW EXECUTE PROCEDURE valid_price()
 
 == Install
 
-For the `Gemfile`
-
-    $ gem 'annotate-sequel'
+  gem install sequel-annotate
 
 == Usage
 
-In your Rails project run:
+After loading the models:
 
-    $ annotate
+  require 'sequel/annotate'
+  Sequel::Annotate.annotate(Dir['models/*.rb'])
 
-That's it.
+That will append or replace the schema comment in each of the files.  It's best
+to run this when the repository is clean, and then use your source control
+tools (e.g. git diff) to see the changes it makes.
 
-== TODO
+In some cases, sequel-annotate may not be able to correctly guess the
+model for the file.  In that case, you may need to create an instance manually:
 
-* Update models after migrations
+  sa = Sequel::Annotate.new(Item)
+  sa.annotate('models/item.rb')
 
-== Contributing to annotate-sequel
- 
-* Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet.
-* Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it.
-* Fork the project.
-* Start a feature/bugfix branch.
-* Commit and push until you are happy with your contribution.
-* Make sure to add tests for it. This is important so I don't break it in a future version unintentionally.
-* Please try not to mess with the Rakefile, version, or history. If you want to have your own version, or is otherwise necessary, that is fine, but please isolate to its own commit so I can cherry-pick around it.
+If you want to get the schema comment for a model without appending it to
+a file:
 
-== Copyright
+  sa.schema_comment
 
-Copyright (c) 2013-2015 Kenny Meyer. See LICENSE.txt for
-further details.
+== License
 
+MIT
+
+== Author
+
+Jeremy Evans <code@jeremyevans.net>
+
+Based on [annotate-sequel]{https://github.com/kennym/annotate-sequel} by Kenny Meyer.
