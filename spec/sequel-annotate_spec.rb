@@ -67,7 +67,7 @@ class ::SManufacturer < Sequel::Model(SDB[:manufacturers]); end
 
 describe Sequel::Annotate do
   before do
-    File.mkdir('spec/tmp') unless File.directory?('spec/tmp')
+    Dir.mkdir('spec/tmp') unless File.directory?('spec/tmp')
   end
   after do
     Dir['spec/tmp/*.rb'].each{|f| File.delete(f)}
