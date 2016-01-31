@@ -62,6 +62,16 @@ a file:
 
   sa.schema_comment
 
+=== Rake Task
+
+Here's an example rake task for sequel-annotate:
+
+  desc "Update model annotations"
+  task :annotate do
+    require 'sequel/annotate'
+    Sequel::Annotate.annotate(Dir['models/*.rb'])
+  end
+
 == License
 
 MIT
