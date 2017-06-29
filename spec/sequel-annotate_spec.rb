@@ -13,7 +13,7 @@ SDB = Sequel.sqlite
 [DB, SDB].each do |db|
   db.create_table :categories do
     primary_key :id
-    String :name, :unique=>true, :null=>false
+    String :name, :index=>{:unique=>true, :name=>'categories_name_key'}, :null=>false
   end
 
   db.create_table :manufacturers do
@@ -144,6 +144,8 @@ OUTPUT
 # Columns:
 #  id   | integer      | PRIMARY KEY AUTOINCREMENT
 #  name | varchar(255) | NOT NULL
+# Indexes:
+#  categories_name_key | UNIQUE (name)
 OUTPUT
 
     Sequel::Annotate.new(SManufacturer).schema_comment.must_equal((<<OUTPUT).chomp)

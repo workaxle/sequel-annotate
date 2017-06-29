@@ -5,3 +5,5 @@ end
 # Columns:
 #  id   | integer      | PRIMARY KEY AUTOINCREMENT
 #  name | varchar(255) | NOT NULL
+# Indexes:
+#  categories_name_key | UNIQUE (name)
