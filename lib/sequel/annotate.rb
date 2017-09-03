@@ -27,20 +27,28 @@ module Sequel
 
     # Append the schema comment (or replace it if one already exists) to
     # the file at the given path.
-    def annotate(path)
+    def annotate(path, position = :after)
       orig = current = File.read(path).rstrip
 
-      if m = current.reverse.match(/#{"#{$/}# Table: ".reverse}/m)
-        offset = current.length - m.end(0) + 1
-        unless current[offset..-1].match(/^[^#]/)
-          # If Table: comment exists, and there are no
-          # uncommented lines between it and the end of the file
-          # then replace current comment instead of appending it
-          current = current[0...offset].rstrip
+      if position == :after
+        
+        if m = current.reverse.match(/#{"#{$/}# Table: ".reverse}/m)
+          offset = current.length - m.end(0) + 1
+          unless current[offset..-1].match(/^[^#]/)
+            # If Table: comment exists, and there are no
+            # uncommented lines between it and the end of the file
+            # then replace current comment instead of appending it
+            current = current[0...offset].rstrip
+          end
         end
-      end
+        current += "#{$/}#{$/}#{schema_comment}"
 
-      current += "#{$/}#{$/}#{schema_comment}"
+      elsif position == :before
+
+        current = current.gsub(/\A#\sTable[^\n\r]+\r?\n(?:#[^\n\r]*\r?\n)*/m, '').lstrip
+        current = "#{schema_comment}#{$/}#{$/}#{current}"
+
+      end
 
       if orig != current
         File.open(path, "wb") do |f|
