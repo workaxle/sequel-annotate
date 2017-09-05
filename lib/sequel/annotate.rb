@@ -8,11 +8,11 @@ module Sequel
     # an instance manually and pass in the model and path. Example:
     # 
     #   Sequel::Annotate.annotate(Dir['models/*.rb'])
-    def self.annotate(paths)
+    def self.annotate(paths, options = {})
       Sequel.extension :inflector
       paths.each do |path|
         if match = File.read(path).match(/class (\S+)\s*<\s*Sequel::Model/)
-          new(match[1].constantize).annotate(path)
+          new(match[1].constantize).annotate(path, options)
         end
       end
     end
@@ -22,16 +22,18 @@ module Sequel
 
     # Store the model to annotate
     def initialize(model)
-      @model = model 
+      @model = model
     end
 
     # Append the schema comment (or replace it if one already exists) to
     # the file at the given path.
-    def annotate(path, position = :after)
+    def annotate(path, options = {})
       orig = current = File.read(path).rstrip
 
-      if position == :after
-        
+      if options[:position] == :before
+        current = current.gsub(/\A#\sTable[^\n\r]+\r?\n(?:#[^\n\r]*\r?\n)*/m, '').lstrip
+        current = "#{schema_comment}#{$/}#{$/}#{current}"
+      else
         if m = current.reverse.match(/#{"#{$/}# Table: ".reverse}/m)
           offset = current.length - m.end(0) + 1
           unless current[offset..-1].match(/^[^#]/)
@@ -42,12 +44,6 @@ module Sequel
           end
         end
         current += "#{$/}#{$/}#{schema_comment}"
-
-      elsif position == :before
-
-        current = current.gsub(/\A#\sTable[^\n\r]+\r?\n(?:#[^\n\r]*\r?\n)*/m, '').lstrip
-        current = "#{schema_comment}#{$/}#{$/}#{current}"
-
       end
 
       if orig != current
