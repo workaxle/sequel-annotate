@@ -157,26 +157,80 @@ OUTPUT
 OUTPUT
   end
 
-  it "#annotate should annotate the file comment" do
-    FileUtils.cp(Dir['spec/unannotated/*.rb'], 'spec/tmp')
+  describe 'without options' do
+    it "#annotate should annotate the file comment" do
+      FileUtils.cp(Dir['spec/unannotated/*.rb'], 'spec/tmp')
 
-    [Item, Category, Manufacturer, SItem, SCategory, SManufacturer].each do |model|
-      filename = model.name.downcase
+      [Item, Category, Manufacturer, SItem, SCategory, SManufacturer].each do |model|
+        filename = model.name.downcase
+        2.times do
+          Sequel::Annotate.new(model).annotate("spec/tmp/#{filename}.rb")
+          File.read("spec/tmp/#{filename}.rb").must_equal File.read("spec/annotated_after/#{filename}.rb")
+        end
+      end
+    end
+
+    it ".annotate should annotate all files given" do
+      FileUtils.cp(Dir['spec/unannotated/*.rb'], 'spec/tmp')
+
       2.times do
-        Sequel::Annotate.new(model).annotate("spec/tmp/#{filename}.rb")
-        File.read("spec/tmp/#{filename}.rb").must_equal File.read("spec/annotated/#{filename}.rb")
+        Sequel::Annotate.annotate(Dir["spec/tmp/*.rb"])
+        [Item, Category, Manufacturer, SItem, SCategory, SManufacturer].each do |model|
+          filename = model.name.downcase
+          File.read("spec/tmp/#{filename}.rb").must_equal File.read("spec/annotated_after/#{filename}.rb")
+        end
       end
     end
   end
 
-  it ".annotate should annotate all files given" do
-    FileUtils.cp(Dir['spec/unannotated/*.rb'], 'spec/tmp')
+  describe 'with {position: before} options' do
+    it "#annotate should annotate the file comment" do
+      FileUtils.cp(Dir['spec/unannotated/*.rb'], 'spec/tmp')
 
-    2.times do
-      Sequel::Annotate.annotate(Dir["spec/tmp/*.rb"])
       [Item, Category, Manufacturer, SItem, SCategory, SManufacturer].each do |model|
         filename = model.name.downcase
-        File.read("spec/tmp/#{filename}.rb").must_equal File.read("spec/annotated/#{filename}.rb")
+        2.times do
+          Sequel::Annotate.new(model).annotate("spec/tmp/#{filename}.rb", position: :before)
+          File.read("spec/tmp/#{filename}.rb").must_equal File.read("spec/annotated_before/#{filename}.rb")
+        end
+      end
+    end
+
+    it ".annotate should annotate all files given" do
+      FileUtils.cp(Dir['spec/unannotated/*.rb'], 'spec/tmp')
+
+      2.times do
+        Sequel::Annotate.annotate(Dir["spec/tmp/*.rb"], position: :before)
+        [Item, Category, Manufacturer, SItem, SCategory, SManufacturer].each do |model|
+          filename = model.name.downcase
+          File.read("spec/tmp/#{filename}.rb").must_equal File.read("spec/annotated_before/#{filename}.rb")
+        end
+      end
+    end
+  end
+
+  describe 'with {position: after} options' do
+    it "#annotate should annotate the file comment" do
+      FileUtils.cp(Dir['spec/unannotated/*.rb'], 'spec/tmp')
+
+      [Item, Category, Manufacturer, SItem, SCategory, SManufacturer].each do |model|
+        filename = model.name.downcase
+        2.times do
+          Sequel::Annotate.new(model).annotate("spec/tmp/#{filename}.rb", position: :after)
+          File.read("spec/tmp/#{filename}.rb").must_equal File.read("spec/annotated_after/#{filename}.rb")
+        end
+      end
+    end
+
+    it ".annotate should annotate all files given" do
+      FileUtils.cp(Dir['spec/unannotated/*.rb'], 'spec/tmp')
+
+      2.times do
+        Sequel::Annotate.annotate(Dir["spec/tmp/*.rb"], position: :after)
+        [Item, Category, Manufacturer, SItem, SCategory, SManufacturer].each do |model|
+          filename = model.name.downcase
+          File.read("spec/tmp/#{filename}.rb").must_equal File.read("spec/annotated_after/#{filename}.rb")
+        end
       end
     end
   end
