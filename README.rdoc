@@ -10,7 +10,7 @@ tables that reference the current table.
 
 == Example
 
-The schema comments are kept at the begin or at the end of the file, using a format similar to:
+The schema comments are kept at the end of the file by default, using a format similar to:
 
   class Item < Sequel::Model
   end
@@ -62,7 +62,8 @@ a file:
 
   sa.schema_comment
 
-If you want to put the schema comment at the begin of the file you can set position option:
+If you want to put the schema comment at the beginning of the file you can use
+the :position option:
 
   Sequel::Annotate.annotate(Dir['models/*.rb'], position: :before)
 
