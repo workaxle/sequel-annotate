@@ -1,3 +1,7 @@
-=== 1.0.0 (2014-09-15)
+=== 1.1.0 (2017-09-06)
+
+* Support :position=>:before option to annotate to put annotation at the beginning of the file (a0s) (#4)
+
+=== 1.0.0 (2015-09-14)
 
 * Initial Public Release
