@@ -115,7 +115,7 @@ SQL
       unless rows.empty?
         output << "# Indexes:"
         rows = rows.map do |r|
-          [r[:relname], "#{"PRIMARY KEY " if r[:indisprimary]}#{"UNIQUE " if r[:indisunique] && !r[:indisprimary]}#{r[:pg_get_indexdef].match(/USING (.+)\z/)[1]}"]
+          [r[:relname], "#{"PRIMARY KEY " if r[:indisprimary]}#{"UNIQUE " if r[:indisunique] && !r[:indisprimary]}#{r[:pg_get_indexdef].match(/USING (.+)\z/m)[1]}"]
         end
         output.concat(align(rows))
       end
@@ -129,7 +129,7 @@ SQL
       unless rows.empty?
         output << "# Check constraints:"
         rows = rows.map do |r|
-          [r[:conname], r[:pg_get_constraintdef].match(/CHECK (.+)\z/)[1]]
+          [r[:conname], r[:pg_get_constraintdef].match(/CHECK (.+)\z/m)[1]]
         end
         output.concat(align(rows))
       end
@@ -143,7 +143,7 @@ SQL
       unless rows.empty?
         output << "# Foreign key constraints:"
         rows = rows.map do |r|
-          [r[:conname], r[:condef].match(/FOREIGN KEY (.+)\z/)[1]]
+          [r[:conname], r[:condef].match(/FOREIGN KEY (.+)\z/m)[1]]
         end
         output.concat(align(rows))
       end
@@ -157,7 +157,7 @@ SQL
       unless rows.empty?
         output << "# Referenced By:"
         rows = rows.map do |r|
-          [r[:conrelid], r[:conname], r[:condef].match(/FOREIGN KEY (.+)\z/)[1]]
+          [r[:conrelid], r[:conname], r[:condef].match(/FOREIGN KEY (.+)\z/m)[1]]
         end
         output.concat(align(rows))
       end
@@ -171,7 +171,7 @@ SQL
       unless rows.empty?
         output << "# Triggers:"
         rows = rows.map do |r|
-          [r[:tgname], r[:pg_get_triggerdef].match(/((?:BEFORE|AFTER) .+)\z/)[1]]
+          [r[:tgname], r[:pg_get_triggerdef].match(/((?:BEFORE|AFTER) .+)\z/m)[1]]
         end
         output.concat(align(rows))
       end

@@ -1,3 +1,7 @@
+=== master
+
+* Use multiline regexps when parsing schema on PostgreSQL (jeremyevans) (#5)
+
 === 1.1.0 (2017-09-06)
 
 * Support :position=>:before option to annotate to put annotation at the beginning of the file (a0s) (#4)
