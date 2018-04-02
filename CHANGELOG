@@ -1,4 +1,6 @@
-=== master
+=== 1.2.0 (2018-04-02)
+
+* Handle PostgreSQL 10+ identity columns when running on Sequel 5.7+ (jeremyevans)
 
 * Use multiline regexps when parsing schema on PostgreSQL (jeremyevans) (#5)
 
