@@ -2,7 +2,6 @@ spec = Gem::Specification.new do |s|
   s.name = 'sequel-annotate'
   s.version = '1.2.0'
   s.platform = Gem::Platform::RUBY
-  s.has_rdoc = true
   s.extra_rdoc_files = ["README.rdoc", "CHANGELOG", "MIT-LICENSE"]
   s.rdoc_options += ["--quiet", "--line-numbers", "--inline-source", '--title', 'sequel-annotate: Annotate Sequel models with schema information', '--main', 'README.rdoc']
   s.license = "MIT"
