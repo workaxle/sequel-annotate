@@ -82,6 +82,15 @@ Here's an example rake task for sequel-annotate:
     Sequel::Annotate.annotate(Dir['models/*.rb'])
   end
 
+== Running Tests
+
+Tests of sequel-annotate itself can be run with rake:
+
+  rake
+
+Set the SEQUEL_ANNOTATE_SPEC_POSTGRES_URL environment variable or appropriate
+libpq environment variables to specify which PostgreSQL database to connect to.
+
 == License
 
 MIT

@@ -1,13 +1,13 @@
 require 'rubygems'
 require 'fileutils'
 require File.join(File.dirname(File.expand_path(__FILE__)), '../lib/sequel/annotate')
+
+ENV['MT_NO_PLUGINS'] = '1' # Work around stupid autoloading of plugins
+gem 'minitest'
 require 'minitest/autorun'
 
-pg_user = ENV['PGUSER'] || 'postgres'
-db_name = ENV['SEQUEL_ANNOTATE_DB'] || 'sequel-annotate_spec'
-system("dropdb", "-U", pg_user, db_name)
-system("createdb", "-U", pg_user, db_name)
-DB = Sequel.postgres(db_name, :user=>pg_user)
+DB = Sequel.connect(ENV['SEQUEL_ANNOTATE_SPEC_POSTGRES_URL'] || 'postgres:///sequel_annotate_test?user=sequel_annotate&password=sequel_annotate')
+raise "test database name doesn't end with test" unless DB.get{current_database.function} =~ /test\z/
 SDB = Sequel.sqlite
 
 [DB, SDB].each do |db|
@@ -56,6 +56,11 @@ DB.run <<SQL
 CREATE TRIGGER valid_price BEFORE INSERT OR UPDATE ON items
     FOR EACH ROW EXECUTE PROCEDURE valid_price();
 SQL
+
+Minitest.after_run do
+  DB.drop_table(:items, :manufacturers, :categories)
+  DB.drop_function(:valid_price)
+end
 
 class ::Item < Sequel::Model; end
 class ::Category < Sequel::Model; end
