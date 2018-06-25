@@ -11,8 +11,11 @@ module Sequel
     def self.annotate(paths, options = {})
       Sequel.extension :inflector
       paths.each do |path|
-        if match = File.read(path).match(/class (\S+)\s*<\s*Sequel::Model/)
-          new(match[1].constantize).annotate(path, options)
+        if match = File.read(path).match(/class (\S+)\s*</)
+          klass = match[1].constantize
+          if klass.ancestors.include?(Sequel::Model)
+            new(klass).annotate(path, options)
+          end
         end
       end
     end
