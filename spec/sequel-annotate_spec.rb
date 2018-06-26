@@ -8,7 +8,10 @@ require 'minitest/autorun'
 
 DB = Sequel.connect(ENV['SEQUEL_ANNOTATE_SPEC_POSTGRES_URL'] || 'postgres:///sequel_annotate_test?user=sequel_annotate&password=sequel_annotate')
 raise "test database name doesn't end with test" unless DB.get{current_database.function} =~ /test\z/
-SDB = Sequel.sqlite
+if defined?(JRUBY_VERSION)
+else
+  SDB = Sequel.sqlite
+end
 
 [DB, SDB].each do |db|
   db.create_table :categories do
@@ -69,6 +72,8 @@ class ::SItem < Sequel::Model(SDB[:items]); end
 class ::SCategory < Sequel::Model(SDB[:categories]); end
 class ::SManufacturer < Sequel::Model(SDB[:manufacturers]); end
 
+# Abstract Base Class
+ABC = Class.new(Sequel::Model)
 
 describe Sequel::Annotate do
   def fix_pg_comment(comment)

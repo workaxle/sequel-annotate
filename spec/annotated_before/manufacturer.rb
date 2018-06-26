@@ -8,5 +8,5 @@
 # Referenced By:
 #  items | items_manufacturer_name_fkey | (manufacturer_name, manufacturer_location) REFERENCES manufacturers(name, location)
 
-class Manufacturer < Sequel::Model
+class Manufacturer < ABC
 end

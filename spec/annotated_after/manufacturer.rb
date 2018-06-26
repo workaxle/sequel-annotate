@@ -1,4 +1,4 @@
-class Manufacturer < Sequel::Model
+class Manufacturer < ABC
 end
 
 # Table: manufacturers
