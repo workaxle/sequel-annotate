@@ -9,6 +9,7 @@ require 'minitest/autorun'
 DB = Sequel.connect(ENV['SEQUEL_ANNOTATE_SPEC_POSTGRES_URL'] || 'postgres:///sequel_annotate_test?user=sequel_annotate&password=sequel_annotate')
 raise "test database name doesn't end with test" unless DB.get{current_database.function} =~ /test\z/
 if defined?(JRUBY_VERSION)
+  SDB = Sequel.connect('jdbc:sqlite::memory:')
 else
   SDB = Sequel.sqlite
 end
