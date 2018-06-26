@@ -14,7 +14,10 @@ else
   SDB = Sequel.sqlite
 end
 
+DB.drop_function(:valid_price) rescue nil
 [DB, SDB].each do |db|
+  db.drop_table?(:items, :manufacturers, :categories)
+
   db.create_table :categories do
     primary_key :id
     String :name, :index=>{:unique=>true, :name=>'categories_name_key'}, :null=>false
@@ -75,6 +78,12 @@ class ::SManufacturer < Sequel::Model(SDB[:manufacturers]); end
 
 # Abstract Base Class
 ABC = Class.new(Sequel::Model)
+
+module ModelNamespace
+  Model = Class.new(Sequel::Model)
+  Model.def_Model(self)
+  class Itms < Model(:items); end
+end
 
 describe Sequel::Annotate do
   def fix_pg_comment(comment)
@@ -203,5 +212,11 @@ OUTPUT
         end
       end
     end
+  end
+
+  it ".annotate #{desc} should handle :namespace option" do
+    FileUtils.cp('spec/namespaced/itm_unannotated.rb', 'spec/tmp/')
+    Sequel::Annotate.annotate(["spec/tmp/itm_unannotated.rb"], :namespace=>'ModelNamespace')
+    File.read("spec/tmp/itm_unannotated.rb").must_equal fix_pg_comment(File.read('spec/namespaced/itm_annotated.rb'))
   end
 end

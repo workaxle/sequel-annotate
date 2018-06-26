@@ -10,9 +10,15 @@ module Sequel
     #   Sequel::Annotate.annotate(Dir['models/*.rb'])
     def self.annotate(paths, options = {})
       Sequel.extension :inflector
+      namespace = options[:namespace]
+
       paths.each do |path|
         if match = File.read(path).match(/class (\S+)\s*</)
-          klass = match[1].constantize
+          name = match[1]
+          if namespace
+            name = "#{namespace}::#{name}"
+          end
+          klass = name.constantize
           if klass.ancestors.include?(Sequel::Model)
             new(klass).annotate(path, options)
           end

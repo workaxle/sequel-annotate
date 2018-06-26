@@ -72,12 +72,26 @@ or
   sa = Sequel::Annotate.new(Item)
   sa.annotate('models/item.rb', position: :before)
 
+If your models are nested in a namespace:
+
+  module ModelNamespace
+    class Item < Sequel::Model
+    end
+  end
+
+Then you can use the +:namespace+ option to set the namespace to use:
+
+  Sequel::Annotate.annotate(Dir['models/*.rb'], namespace: 'ModelNamespace')
+
 === Rake Task
 
 Here's an example rake task for sequel-annotate:
 
   desc "Update model annotations"
   task :annotate do
+    # Load the models first
+    Dir['models/*.rb'].each{|f| require_relative f}
+
     require 'sequel/annotate'
     Sequel::Annotate.annotate(Dir['models/*.rb'])
   end

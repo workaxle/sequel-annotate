@@ -1,5 +1,7 @@
 === master
 
+* Support :namespace option to specify namespace to add for models nested in namespaces (jeremyevans)
+
 * Make Sequel::Annotate.annotate support STI classes and custom abstract base classes (a0s) (#7)
 
 === 1.2.0 (2018-04-02)
