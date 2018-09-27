@@ -16,7 +16,7 @@ end
 
 DB.drop_function(:valid_price) rescue nil
 [DB, SDB].each do |db|
-  db.drop_table?(:items, :manufacturers, :categories)
+  db.drop_table?(:newline_tests, :items, :manufacturers, :categories)
 
   db.create_table :categories do
     primary_key :id
@@ -44,6 +44,12 @@ DB.drop_function(:valid_price) rescue nil
 
     index [:manufacturer_name, :manufacturer_location], :name=>:name, :unique=>true
     index [:manufacturer_name], :name=>:manufacturer_name
+  end
+
+  db.create_table :newline_tests do
+    Integer :abcde_fghi_id
+    Integer :jkl_mnopqr_id
+    constraint(:valid_stuvw_xyz0, Sequel.case({{:abcde_fghi_id=>[5,6]}=>Sequel.~(:jkl_mnopqr_id=>nil)}, :jkl_mnopqr_id=>nil))
   end
 end
 
@@ -75,6 +81,7 @@ class ::Manufacturer < Sequel::Model; end
 class ::SItem < Sequel::Model(SDB[:items]); end
 class ::SCategory < Sequel::Model(SDB[:categories]); end
 class ::SManufacturer < Sequel::Model(SDB[:manufacturers]); end
+class ::NewlineTest < Sequel::Model; end
 
 # Abstract Base Class
 ABC = Class.new(Sequel::Model)
@@ -146,6 +153,19 @@ OUTPUT
 #  manufacturers_pkey | PRIMARY KEY btree (name, location)
 # Referenced By:
 #  items | items_manufacturer_name_fkey | (manufacturer_name, manufacturer_location) REFERENCES manufacturers(name, location)
+OUTPUT
+
+    Sequel::Annotate.new(NewlineTest).schema_comment.must_equal((<<OUTPUT).chomp)
+# Table: newline_tests
+# Columns:
+#  abcde_fghi_id | integer |
+#  jkl_mnopqr_id | integer |
+# Check constraints:
+#  valid_stuvw_xyz0 | (
+#    CASE
+#        WHEN abcde_fghi_id = ANY (ARRAY[5, 6]) THEN jkl_mnopqr_id IS NOT NULL
+#        ELSE jkl_mnopqr_id IS NULL
+#    END)
 OUTPUT
 
     Sequel::Annotate.new(SItem).schema_comment.must_equal((<<OUTPUT).chomp)

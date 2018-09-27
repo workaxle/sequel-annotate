@@ -101,7 +101,7 @@ module Sequel
       end
 
       rows.map do |r|
-        "#  #{r.zip(lengths).map{|c, l| c.ljust(l)}.join(' | ')}".strip
+        "#  #{r.zip(lengths).map{|c, l| c.ljust(l).gsub("\n", "\n#    ")}.join(' | ')}".strip
       end
     end
 
