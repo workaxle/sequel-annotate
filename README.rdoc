@@ -83,6 +83,15 @@ Then you can use the +:namespace+ option to set the namespace to use:
 
   Sequel::Annotate.annotate(Dir['models/*.rb'], namespace: 'ModelNamespace')
 
+For PostgreSQL, you can optionally leave out indexes, foreign_keys, references,
+triggers, and constraints by passing in false as a parameter as follows:
+
+  Sequel::Annotate.annotate(Dir['models/*.rb'], foreign_keys: false, :indexes: false, constraints: false)
+
+The columns section can have a border on the top and bottom for easier visual distinction by setting the :border option to true
+
+  Sequel::Annotate.annotate(Dir['models/*.rb'], border: true)
+
 === Rake Task
 
 Here's an example rake task for sequel-annotate:

@@ -41,7 +41,7 @@ module Sequel
 
       if options[:position] == :before
         current = current.gsub(/\A#\sTable[^\n\r]+\r?\n(?:#[^\n\r]*\r?\n)*/m, '').lstrip
-        current = "#{schema_comment}#{$/}#{$/}#{current}"
+        current = "#{schema_comment(options)}#{$/}#{$/}#{current}"
       else
         if m = current.reverse.match(/#{"#{$/}# Table: ".reverse}/m)
           offset = current.length - m.end(0) + 1
@@ -52,7 +52,7 @@ module Sequel
             current = current[0...offset].rstrip
           end
         end
-        current += "#{$/}#{$/}#{schema_comment}"
+        current += "#{$/}#{$/}#{schema_comment(options)}"
       end
 
       if orig != current
@@ -65,19 +65,19 @@ module Sequel
     # The schema comment to use for this model.  
     # For all databases, includes columns, indexes, and foreign
     # key constraints in this table referencing other tables.
-    # On PostgreSQL, also includes check constraints, triggers,
+    # On PostgreSQL, also optionally includes check constraints, triggers,
     # and foreign key constraints in other tables referencing this table.
-    def schema_comment
+    def schema_comment(options = {})
       output = []
       output << "# Table: #{model.table_name}"
 
       meth = :"_schema_comment_#{model.db.database_type}"
       if respond_to?(meth, true)
-        send(meth, output)
+        send(meth, output, options)
       else
         schema_comment_columns(output)
-        schema_comment_indexes(output)
-        schema_comment_foreign_keys(output)
+        schema_comment_indexes(output) unless options[:indexes] == false
+        schema_comment_foreign_keys(output) unless options[:foreign_keys] == false
       end
 
       output.join($/)
@@ -107,87 +107,97 @@ module Sequel
 
     # Use the standard columns schema output, but use PostgreSQL specific
     # code for additional schema information.
-    def _schema_comment_postgres(output)
-      schema_comment_columns(output)
+    def _schema_comment_postgres(output, options = {})
+      schema_comment_columns(output, options)
       oid = model.db.send(:regclass_oid, model.table_name)
 
       # These queries below are all based on the queries that psql
       # uses, captured using the -E option to psql.
 
-      rows = model.db.fetch(<<SQL, :oid=>oid).all
+      unless options[:indexes] == false
+        rows = model.db.fetch(<<SQL, :oid=>oid).all
 SELECT c2.relname, i.indisprimary, i.indisunique, pg_catalog.pg_get_indexdef(i.indexrelid, 0, true)
 FROM pg_catalog.pg_class c, pg_catalog.pg_class c2, pg_catalog.pg_index i
   LEFT JOIN pg_catalog.pg_constraint con ON (conrelid = i.indrelid AND conindid = i.indexrelid AND contype IN ('p','u','x'))
 WHERE c.oid = :oid AND c.oid = i.indrelid AND i.indexrelid = c2.oid AND indisvalid
 ORDER BY i.indisprimary DESC, i.indisunique DESC, c2.relname;
 SQL
-      unless rows.empty?
-        output << "# Indexes:"
-        rows = rows.map do |r|
-          [r[:relname], "#{"PRIMARY KEY " if r[:indisprimary]}#{"UNIQUE " if r[:indisunique] && !r[:indisprimary]}#{r[:pg_get_indexdef].match(/USING (.+)\z/m)[1]}"]
+        unless rows.empty?
+          output << "# Indexes:"
+          rows = rows.map do |r|
+            [r[:relname], "#{"PRIMARY KEY " if r[:indisprimary]}#{"UNIQUE " if r[:indisunique] && !r[:indisprimary]}#{r[:pg_get_indexdef].match(/USING (.+)\z/m)[1]}"]
+          end
+          output.concat(align(rows))
         end
-        output.concat(align(rows))
       end
 
-      rows = model.db.fetch(<<SQL, :oid=>oid).all
+      unless options[:constraints] == false
+        rows = model.db.fetch(<<SQL, :oid=>oid).all
 SELECT r.conname, pg_catalog.pg_get_constraintdef(r.oid, true)
 FROM pg_catalog.pg_constraint r
 WHERE r.conrelid = :oid AND r.contype = 'c'
 ORDER BY 1;
 SQL
-      unless rows.empty?
-        output << "# Check constraints:"
-        rows = rows.map do |r|
-          [r[:conname], r[:pg_get_constraintdef].match(/CHECK (.+)\z/m)[1]]
+        unless rows.empty?
+          output << "# Check constraints:"
+          rows = rows.map do |r|
+            [r[:conname], r[:pg_get_constraintdef].match(/CHECK (.+)\z/m)[1]]
+          end
+          output.concat(align(rows))
         end
-        output.concat(align(rows))
       end
 
-      rows = model.db.fetch(<<SQL, :oid=>oid).all
+      unless options[:foreign_keys] == false
+        rows = model.db.fetch(<<SQL, :oid=>oid).all
 SELECT conname,
   pg_catalog.pg_get_constraintdef(r.oid, true) as condef
 FROM pg_catalog.pg_constraint r
 WHERE r.conrelid = :oid AND r.contype = 'f' ORDER BY 1;
 SQL
-      unless rows.empty?
-        output << "# Foreign key constraints:"
-        rows = rows.map do |r|
-          [r[:conname], r[:condef].match(/FOREIGN KEY (.+)\z/m)[1]]
+        unless rows.empty?
+          output << "# Foreign key constraints:"
+          rows = rows.map do |r|
+            [r[:conname], r[:condef].match(/FOREIGN KEY (.+)\z/m)[1]]
+          end
+          output.concat(align(rows))
         end
-        output.concat(align(rows))
       end
 
-      rows = model.db.fetch(<<SQL, :oid=>oid).all
+      unless options[:references] == false
+        rows = model.db.fetch(<<SQL, :oid=>oid).all
 SELECT conname, conrelid::pg_catalog.regclass,
   pg_catalog.pg_get_constraintdef(c.oid, true) as condef
 FROM pg_catalog.pg_constraint c
 WHERE c.confrelid = :oid AND c.contype = 'f' ORDER BY 2, 1;
 SQL
-      unless rows.empty?
-        output << "# Referenced By:"
-        rows = rows.map do |r|
-          [r[:conrelid], r[:conname], r[:condef].match(/FOREIGN KEY (.+)\z/m)[1]]
+        unless rows.empty?
+          output << "# Referenced By:"
+          rows = rows.map do |r|
+            [r[:conrelid], r[:conname], r[:condef].match(/FOREIGN KEY (.+)\z/m)[1]]
+          end
+          output.concat(align(rows))
         end
-        output.concat(align(rows))
       end
 
-      rows = model.db.fetch(<<SQL, :oid=>oid).all
+      unless options[:triggers] == false
+        rows = model.db.fetch(<<SQL, :oid=>oid).all
 SELECT t.tgname, pg_catalog.pg_get_triggerdef(t.oid, true), t.tgenabled, t.tgisinternal
 FROM pg_catalog.pg_trigger t
 WHERE t.tgrelid = :oid AND (NOT t.tgisinternal OR (t.tgisinternal AND t.tgenabled = 'D'))
 ORDER BY 1;
 SQL
-      unless rows.empty?
-        output << "# Triggers:"
-        rows = rows.map do |r|
-          [r[:tgname], r[:pg_get_triggerdef].match(/((?:BEFORE|AFTER) .+)\z/m)[1]]
+        unless rows.empty?
+          output << "# Triggers:"
+          rows = rows.map do |r|
+            [r[:tgname], r[:pg_get_triggerdef].match(/((?:BEFORE|AFTER) .+)\z/m)[1]]
+          end
+          output.concat(align(rows))
         end
-        output.concat(align(rows))
       end
     end
 
     # The standard column schema information to output.
-    def schema_comment_columns(output)
+    def schema_comment_columns(output, options = {})
       if cpk = model.primary_key.is_a?(Array)
         output << "# Primary Key: (#{model.primary_key.join(', ')})"
       end
@@ -197,6 +207,13 @@ SQL
         [col.to_s, sch[:db_type], "#{"PRIMARY KEY #{"AUTOINCREMENT " if sch[:auto_increment] && model.db.database_type != :postgres}" if sch[:primary_key] && !cpk}#{"NOT NULL " if sch[:allow_null] == false && !sch[:primary_key]}#{"DEFAULT #{sch[:default]}" if sch[:default]}#{"GENERATED BY DEFAULT AS IDENTITY" if sch[:auto_increment] && !sch[:default] && model.db.database_type == :postgres && model.db.server_version >= 100000}"]
       end
       output.concat(align(rows))
+
+      # Add beginning and end to the table if specified
+      if options[:border] == true
+        border = "# #{'-' * (output.map(&:size).max - 2)}"
+        output.push border
+        output.insert(2, border)
+      end
     end
 
     # The standard index information to output.

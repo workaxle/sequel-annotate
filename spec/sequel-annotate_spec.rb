@@ -107,6 +107,36 @@ describe Sequel::Annotate do
     Dir['spec/tmp/*.rb'].each{|f| File.delete(f)}
   end
 
+  it "#schema_info should not return sections we set to false" do
+    Sequel::Annotate.new(Item).schema_comment(indexes: false, constraints: false, foreign_keys: false, triggers: false).must_equal(fix_pg_comment((<<OUTPUT).chomp))
+# Table: items
+# Columns:
+#  id                    | integer               | PRIMARY KEY DEFAULT nextval('items_id_seq'::regclass)
+#  category_id           | integer               | NOT NULL
+#  manufacturer_name     | character varying(50) |
+#  manufacturer_location | text                  |
+#  in_stock              | boolean               | DEFAULT false
+#  name                  | text                  | DEFAULT 'John'::text
+#  price                 | double precision      | DEFAULT 0
+OUTPUT
+  end
+
+  it "#schema_info should return a border if we want one" do
+    Sequel::Annotate.new(Item).schema_comment(border: true, indexes: false, constraints: false, foreign_keys: false, triggers: false).must_equal(fix_pg_comment((<<OUTPUT).chomp))
+# Table: items
+# Columns:
+# ------------------------------------------------------------------------------------------------------
+#  id                    | integer               | PRIMARY KEY DEFAULT nextval('items_id_seq'::regclass)
+#  category_id           | integer               | NOT NULL
+#  manufacturer_name     | character varying(50) |
+#  manufacturer_location | text                  |
+#  in_stock              | boolean               | DEFAULT false
+#  name                  | text                  | DEFAULT 'John'::text
+#  price                 | double precision      | DEFAULT 0
+# ------------------------------------------------------------------------------------------------------
+OUTPUT
+  end
+
   it "#schema_info should return the model schema comment" do
     Sequel::Annotate.new(Item).schema_comment.must_equal(fix_pg_comment((<<OUTPUT).chomp))
 # Table: items
