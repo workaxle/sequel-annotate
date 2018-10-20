@@ -96,7 +96,7 @@ module Sequel
       if options[:border]
         border = "# #{'-' * (output.map(&:size).max - 2)}"
         output.push(border)
-        output.unshift(border)
+        output.insert(1, border)
       end
 
       output.join($/)

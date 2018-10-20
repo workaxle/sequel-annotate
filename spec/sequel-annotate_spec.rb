@@ -133,8 +133,8 @@ OUTPUT
 
   it "#schema_info should return a border if we want one" do
     Sequel::Annotate.new(Item).schema_comment(:border => true, :indexes => false, :constraints => false, :foreign_keys => false, :triggers => false).gsub(/----+/, '---').must_equal(fix_pg_comment((<<OUTPUT).chomp))
-# ---
 # Table: items
+# ---
 # Columns:
 #  id                    | integer               | PRIMARY KEY DEFAULT nextval('items_id_seq'::regclass)
 #  category_id           | integer               | NOT NULL
@@ -276,6 +276,9 @@ OUTPUT
 
   it ".annotate #{desc} should handle :namespace option" do
     FileUtils.cp('spec/namespaced/itm_unannotated.rb', 'spec/tmp/')
+    Sequel::Annotate.annotate(["spec/tmp/itm_unannotated.rb"], :namespace=>'ModelNamespace')
+    File.read("spec/tmp/itm_unannotated.rb").must_equal fix_pg_comment(File.read('spec/namespaced/itm_annotated.rb'))
+    Sequel::Annotate.annotate(["spec/tmp/itm_unannotated.rb"], :namespace=>'ModelNamespace', :border=>true)
     Sequel::Annotate.annotate(["spec/tmp/itm_unannotated.rb"], :namespace=>'ModelNamespace')
     File.read("spec/tmp/itm_unannotated.rb").must_equal fix_pg_comment(File.read('spec/namespaced/itm_annotated.rb'))
   end
