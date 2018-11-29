@@ -80,7 +80,7 @@ module Sequel
     # :triggers :: Do not include triggers in annotation if set to +false+.
     def schema_comment(options = {})
       output = []
-      output << "# Table: #{model.table_name}"
+      output << "# Table: #{model.dataset.with_quote_identifiers(false).literal(model.table_name)}"
 
       meth = :"_schema_comment_#{model.db.database_type}"
       if respond_to?(meth, true)
