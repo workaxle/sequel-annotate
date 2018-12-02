@@ -1,3 +1,7 @@
+=== master
+
+* Make schema comments handle table names that aren't just symbols (chanks) (#12)
+
 === 1.4.0 (2018-11-15)
 
 * Support adding borders to the beginning and end of comments via :border option (kreynolds) (#9)
