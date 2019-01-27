@@ -70,14 +70,23 @@ CREATE TRIGGER valid_price BEFORE INSERT OR UPDATE ON items
     FOR EACH ROW EXECUTE PROCEDURE valid_price();
 SQL
 
+DB.run "CREATE DOMAIN test_domain AS text"
+
+DB.create_table :domain_tests do
+  primary_key :id
+  test_domain :test_column
+end
+
 Minitest.after_run do
-  DB.drop_table(:items, :manufacturers, :categories)
+  DB.drop_table(:items, :manufacturers, :categories, :domain_tests)
+  DB.run "DROP DOMAIN test_domain"
   DB.drop_function(:valid_price)
 end
 
 class ::Item < Sequel::Model; end
 class ::Category < Sequel::Model; end
 class ::Manufacturer < Sequel::Model; end
+class ::DomainTest < Sequel::Model; end
 class ::SItem < Sequel::Model(SDB[:items]); end
 class ::SCategory < Sequel::Model(SDB[:categories]); end
 class ::SManufacturer < Sequel::Model(SDB[:manufacturers]); end
@@ -254,6 +263,15 @@ OUTPUT
 #  categories_name_key | UNIQUE btree (name)
 # Referenced By:
 #  items | items_category_id_fkey | (category_id) REFERENCES categories(id)
+OUTPUT
+
+    Sequel::Annotate.new(DomainTest).schema_comment.must_equal(fix_pg_comment((<<OUTPUT).chomp))
+# Table: domain_tests
+# Columns:
+#  id          | integer     | PRIMARY KEY DEFAULT nextval('categories_id_seq'::regclass)
+#  test_column | test_domain |
+# Indexes:
+#  domain_tests_pkey | PRIMARY KEY btree (id)
 OUTPUT
   end
   
