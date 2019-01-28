@@ -1,5 +1,7 @@
 === master
 
+* Respect domain types on PostgreSQL (chanks) (#13)
+
 * Make schema comments handle table names that aren't just symbols (chanks) (#12)
 
 === 1.4.0 (2018-11-15)
