@@ -1,5 +1,7 @@
 === master
 
+* Add support for PostgreSQL column comments (rgalanakis, jeremyevans) (#14)
+
 * Respect domain types on PostgreSQL (chanks) (#13)
 
 * Make schema comments handle table names that aren't just symbols (chanks) (#12)

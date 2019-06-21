@@ -216,33 +216,12 @@ SQL
     end
 
     def _column_comments_postgres
-      return {} unless model.db.database_type == :postgres
-
-      dbname = model.db.get{current_database.function}
-      table = model.table_name.to_s
-      schema, _ = model.db.send(:schema_and_table, model.table_name)
-      schema = (schema || "public").to_s
-      rows = model.db.fetch(<<SQL, :dbname => dbname, :schema=> schema, :table=> table).all
-SELECT
-    cols.column_name,
-    (
-        SELECT
-            pg_catalog.col_description(c.oid, cols.ordinal_position::int)
-        FROM pg_catalog.pg_class c
-        WHERE
-            c.oid     = (SELECT cols.table_name::regclass::oid) AND
-            c.relname = cols.table_name
-    ) as column_comment
-FROM information_schema.columns cols
-WHERE
-    cols.table_catalog = :dbname AND
-    cols.table_schema  = :schema AND
-    cols.table_name    = :table;
+      model.db.fetch(<<SQL, :oid=>model.db.send(:regclass_oid, model.table_name)).to_hash(:attname, :description)
+SELECT a.attname, d.description
+FROM pg_description d
+JOIN pg_attribute a ON (d.objoid = a.attrelid AND d.objsubid = a.attnum)
+WHERE d.objoid = :oid AND COALESCE(d.description, '') != '';
 SQL
-      pairs = rows.each_with_object({}) do |row, o|
-        (o[row[:column_name]] = row[:column_comment]) if row[:column_comment]
-      end
-      pairs
     end
 
     # The standard column schema information to output.
@@ -252,7 +231,12 @@ SQL
       end
       output << "# Columns:"
 
-      column_comments = _column_comments_postgres
+      meth = :"_column_comments_#{model.db.database_type}"
+      column_comments = if respond_to?(meth, true)
+        send(meth)
+      else
+        {}
+      end
 
       rows = model.columns.map do |col|
         sch = model.db_schema[col]
