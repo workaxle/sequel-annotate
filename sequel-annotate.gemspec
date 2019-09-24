@@ -22,6 +22,7 @@ tables that reference the current table.
 END
   s.add_dependency('sequel', '>= 4')
   s.add_development_dependency('minitest', '>= 5')
+  s.add_development_dependency "minitest-global_expectations"
   s.add_development_dependency('pg')
   s.add_development_dependency('sqlite3')
 end

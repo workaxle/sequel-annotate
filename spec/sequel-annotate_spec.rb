@@ -4,7 +4,7 @@ require File.join(File.dirname(File.expand_path(__FILE__)), '../lib/sequel/annot
 
 ENV['MT_NO_PLUGINS'] = '1' # Work around stupid autoloading of plugins
 gem 'minitest'
-require 'minitest/autorun'
+require 'minitest/global_expectations/autorun'
 
 DB = Sequel.connect(ENV['SEQUEL_ANNOTATE_SPEC_POSTGRES_URL'] || 'postgres:///sequel_annotate_test?user=sequel_annotate&password=sequel_annotate')
 raise "test database name doesn't end with test" unless DB.get{current_database.function} =~ /test\z/
