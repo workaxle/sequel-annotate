@@ -40,34 +40,13 @@ module Sequel
       orig = current = File.read(path).rstrip
 
       if options[:position] == :before
-        empty_line = /^\s*$/
-        magic_comment_frozen_string_literal = /^#\s*frozen_string_literal[^\n]*\s*/
-        magic_comment_coding = /^#\s*coding[^\n]*\s*/
-        magic_comment_encoding = /^#\s*encoding[^\n]*\s*/
-        magic_comment_warn_indent = /^#\s*warn_indent[^\n]*\s*/
-        magic_comment_warn_past_scope = /^#\s*warn_past_scope[^\n]*\s*/
-
-        magic_comments_line = Regexp.union(
-          empty_line,
-          magic_comment_frozen_string_literal,
-          magic_comment_coding,
-          magic_comment_encoding,
-          magic_comment_warn_indent,
-          magic_comment_warn_past_scope
-        )
-
-        magic_comments_lines = /(?:#{magic_comments_line})*/
-
-        annotate_table = /#\sTable[^\n\r]+\r?\n(?:#[^\n\r]*\r?\n)*/
-        user_code = /.*/m
-
-        file_regex = /\A(?<magic_comments>#{magic_comments_lines})(?:#{annotate_table})?(?<user_code>#{user_code})\z/m
-
-        parts = current.match(file_regex)
-
-        if parts&.length == 3
-          current = "#{parts.named_captures['magic_comments']}#{schema_comment(options)}#{$/}#{$/}#{parts.named_captures['user_code'].lstrip}"
+        if current =~ /\A((?:^\s*$|^#\s*(?:frozen_string_literal|coding|encoding|warn_indent|warn_past_scope)[^\n]*\s*)*)/m
+          magic_comments = $1
+          current.slice!(0, magic_comments.length)
         end
+
+        current = current.gsub(/\A#\sTable[^\n\r]+\r?\n(?:#[^\n\r]*\r?\n)*/m, '').lstrip
+        current = "#{magic_comments}#{schema_comment(options)}#{$/}#{$/}#{current}"
       else
         if m = current.reverse.match(/#{"#{$/}# Table: ".reverse}/m)
           offset = current.length - m.end(0) + 1

@@ -1,6 +1,6 @@
 === master
 
-* Add support for rubocop-abiding `# frozen_string_literal: true` as the first line of model files (qortex) (#15)
+* Add support for magic comments in model files when using the :position=>:before option (qortex, jeremyevans) (#15)
 
 * Add support for PostgreSQL column comments (rgalanakis, jeremyevans) (#14)
 
