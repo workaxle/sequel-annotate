@@ -96,6 +96,7 @@ class ::Manufacturer < Sequel::Model; end
 class ::DomainTest < Sequel::Model; end
 class ::CommentTest < Sequel::Model; end
 class ::SItem < Sequel::Model(SDB[:items]); end
+class ::SItemWithFrozenLiteral < Sequel::Model(SDB[:items]); end
 class ::SCategory < Sequel::Model(SDB[:categories]); end
 class ::SManufacturer < Sequel::Model(SDB[:manufacturers]); end
 class ::NewlineTest < Sequel::Model; end
@@ -299,7 +300,7 @@ OUTPUT
     it "#annotate #{desc} should annotate the file comment" do
       FileUtils.cp(Dir['spec/unannotated/*.rb'], 'spec/tmp')
 
-      [Item, Category, Manufacturer, SItem, SCategory, SManufacturer].each do |model|
+      [Item, Category, Manufacturer, SItem, SCategory, SManufacturer, SItemWithFrozenLiteral].each do |model|
         filename = model.name.downcase
         2.times do
           Sequel::Annotate.new(model).annotate("spec/tmp/#{filename}.rb", *args)
@@ -315,7 +316,7 @@ OUTPUT
 
       2.times do
         Sequel::Annotate.annotate(Dir["spec/tmp/*.rb"], *args)
-        [Item, Category, Manufacturer, SItem, SCategory, SManufacturer].each do |model|
+        [Item, Category, Manufacturer, SItem, SCategory, SManufacturer, SItemWithFrozenLiteral].each do |model|
           filename = model.name.downcase
           expected = File.read("spec/annotated_#{pos}/#{filename}.rb")
           expected = fix_pg_comment(expected) if model.db == DB

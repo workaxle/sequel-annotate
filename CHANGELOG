@@ -1,5 +1,7 @@
 === master
 
+* Add support for rubocop-abiding `# frozen_string_literal: true` as the first line of model files (qortex) (#15)
+
 * Add support for PostgreSQL column comments (rgalanakis, jeremyevans) (#14)
 
 * Respect domain types on PostgreSQL (chanks) (#13)

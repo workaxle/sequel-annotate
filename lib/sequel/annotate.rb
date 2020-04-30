@@ -40,8 +40,13 @@ module Sequel
       orig = current = File.read(path).rstrip
 
       if options[:position] == :before
-        current = current.gsub(/\A#\sTable[^\n\r]+\r?\n(?:#[^\n\r]*\r?\n)*/m, '').lstrip
-        current = "#{schema_comment(options)}#{$/}#{$/}#{current}"
+        #   if 2 parts, 1: frozen_string_literal (if present, empty otherwise), 2: user code
+        #   otherwise: didn't match. Do nothing because code was not understood
+        parts = current.match(/\A(# frozen_string_literal: true[\n\r]*)?(?:#\sTable[^\n\r]+\r?\n(?:#[^\n\r]*\r?\n)*)?(.*)\z/m)
+
+        if parts&.length == 3
+          current = "#{parts[1]}#{schema_comment(options)}#{$/}#{$/}#{parts[2].lstrip}"
+        end
       else
         if m = current.reverse.match(/#{"#{$/}# Table: ".reverse}/m)
           offset = current.length - m.end(0) + 1
