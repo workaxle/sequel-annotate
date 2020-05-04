@@ -5,7 +5,7 @@ default, it includes information on columns, indexes, and foreign key
 constraints for the current table.
 
 On PostgreSQL, this includes more advanced information, including
-check constraints, triggers, and foreign keys constraints for other
+check constraints, triggers, comments, and foreign keys constraints for other
 tables that reference the current table.
 
 == Example
@@ -84,9 +84,10 @@ Then you can use the +:namespace+ option to set the namespace to use:
   Sequel::Annotate.annotate(Dir['models/*.rb'], namespace: 'ModelNamespace')
 
 For PostgreSQL, you can optionally leave out indexes, foreign_keys, references,
-triggers, and constraints by passing in false as a parameter as follows:
+triggers, comments, and constraints by passing in false as a parameter as follows:
 
-  Sequel::Annotate.annotate(Dir['models/*.rb'], foreign_keys: false, :indexes: false, constraints: false)
+  Sequel::Annotate.annotate(Dir['models/*.rb'], foreign_keys: false,
+                            :indexes: false, constraints: false, comments: false)
 
 The columns section can have a border on the top and bottom for easier visual distinction by setting the :border option to true
 

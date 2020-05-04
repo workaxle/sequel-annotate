@@ -1,4 +1,4 @@
-=== master
+=== 1.5.0 (2020-05-04)
 
 * Add support for magic comments in model files when using the :position=>:before option (qortex, jeremyevans) (#15)
 
