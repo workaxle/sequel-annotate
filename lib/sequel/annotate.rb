@@ -237,7 +237,7 @@ SQL
       output << "# Columns:"
 
       meth = :"_column_comments_#{model.db.database_type}"
-      column_comments = if respond_to?(meth, true)
+      column_comments = if options[:comments] != false && respond_to?(meth, true)
         send(meth)
       else
         {}
