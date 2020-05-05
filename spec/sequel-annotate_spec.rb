@@ -209,6 +209,7 @@ OUTPUT
 #  valid_price | BEFORE INSERT OR UPDATE ON items FOR EACH ROW EXECUTE PROCEDURE valid_price()
 OUTPUT
 
+    Sequel::Annotate.new(SComplexDataset).schema_comment.must_equal("foo")
     Sequel::Annotate.new(Category).schema_comment.must_equal(fix_pg_comment((<<OUTPUT).chomp))
 # Table: categories
 # Columns:
