@@ -1,3 +1,11 @@
+=== master
+
+* Skip models that select from a subquery (adam12, jeremyevans) (#17)
+
+* Allow files ot be skipped with sequel-annotate: false magic comment (adam12) (#18)
+
+* Ignore opening of singleton classes with class << when looking for models (adam12) (#16)
+
 === 1.5.0 (2020-05-04)
 
 * Add support for magic comments in model files when using the :position=>:before option (qortex, jeremyevans) (#15)

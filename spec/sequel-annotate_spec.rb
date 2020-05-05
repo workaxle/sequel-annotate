@@ -106,11 +106,7 @@ class ::SCategory < Sequel::Model(SDB[:categories]); end
 class ::SManufacturer < Sequel::Model(SDB[:manufacturers]); end
 class ::NewlineTest < Sequel::Model; end
 class ::QualifiedTableNameTest < Sequel::Model(Sequel.qualify(:public, :categories)); end
-dataset =
-  SDB[:items]
-    .left_join(:categories, { id: :category_id })
-    .select { Sequel[:items][:name] }
-class SComplexDataset < Sequel::Model(dataset); end
+class SComplexDataset < Sequel::Model(SDB[:items].left_join(:categories, :id => :category_id).select{items[:name]}); end
 
 # Abstract Base Class
 ABC = Class.new(Sequel::Model)
@@ -209,7 +205,7 @@ OUTPUT
 #  valid_price | BEFORE INSERT OR UPDATE ON items FOR EACH ROW EXECUTE PROCEDURE valid_price()
 OUTPUT
 
-    Sequel::Annotate.new(SComplexDataset).schema_comment.must_equal("foo")
+    Sequel::Annotate.new(SComplexDataset).schema_comment.must_equal("")
     Sequel::Annotate.new(Category).schema_comment.must_equal(fix_pg_comment((<<OUTPUT).chomp))
 # Table: categories
 # Columns:
@@ -317,7 +313,7 @@ OUTPUT
     it "#annotate #{desc} should annotate the file comment" do
       FileUtils.cp(Dir['spec/unannotated/*.rb'], 'spec/tmp')
 
-      [Item, Category, Manufacturer, SItem, SCategory, SManufacturer, SItemWithFrozenLiteral, SItemWithCoding, SItemWithEncoding, SItemWithWarnIndent, SItemWithWarnPastScope].each do |model|
+      [Item, Category, Manufacturer, SItem, SCategory, SManufacturer, SItemWithFrozenLiteral, SItemWithCoding, SItemWithEncoding, SItemWithWarnIndent, SItemWithWarnPastScope, SComplexDataset].each do |model|
         filename = model.name.downcase
         2.times do
           Sequel::Annotate.new(model).annotate("spec/tmp/#{filename}.rb", *args)
@@ -333,7 +329,7 @@ OUTPUT
 
       2.times do
         Sequel::Annotate.annotate(Dir["spec/tmp/*.rb"], *args)
-        [Item, Category, Manufacturer, SItem, SCategory, SManufacturer, SItemWithFrozenLiteral, SItemWithCoding, SItemWithEncoding, SItemWithWarnIndent, SItemWithWarnPastScope].each do |model|
+        [Item, Category, Manufacturer, SItem, SCategory, SManufacturer, SItemWithFrozenLiteral, SItemWithCoding, SItemWithEncoding, SItemWithWarnIndent, SItemWithWarnPastScope, SComplexDataset].each do |model|
           filename = model.name.downcase
           expected = File.read("spec/annotated_#{pos}/#{filename}.rb")
           expected = fix_pg_comment(expected) if model.db == DB

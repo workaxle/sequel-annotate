@@ -41,6 +41,8 @@ module Sequel
     # Append the schema comment (or replace it if one already exists) to
     # the file at the given path.
     def annotate(path, options = {})
+      return if skip_model?
+
       orig = current = File.read(path).rstrip
 
       if options[:position] == :before
@@ -88,6 +90,8 @@ module Sequel
     #                this table if set to +false+.
     # :triggers :: Do not include triggers in annotation if set to +false+.
     def schema_comment(options = {})
+      return "" if skip_model?
+
       output = []
       output << "# Table: #{model.dataset.with_quote_identifiers(false).literal(model.table_name)}"
 
@@ -280,6 +284,14 @@ SQL
         end
         output.concat(align(rows).sort)
       end
+    end
+
+    # Whether we should skip annotations for the model.
+    # True if the model selects from a dataset.
+    def skip_model?
+      model.dataset.joined_dataset? || model.dataset.first_source_table.is_a?(Dataset)
+    rescue Sequel::Error
+      true
     end
   end
 end

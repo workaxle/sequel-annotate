@@ -93,6 +93,11 @@ The columns section can have a border on the top and bottom for easier visual di
 
   Sequel::Annotate.annotate(Dir['models/*.rb'], border: true)
 
+Models that use datasets that select from subqueries are automatically skipped,
+as annotations don't really make sense for them since they are not backed by a
+table.  You can skip other models by using a <tt># sequel-annotate: false</tt>
+magic comment somewhere in the file.
+
 === Rake Task
 
 Here's an example rake task for sequel-annotate:
