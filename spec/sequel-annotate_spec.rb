@@ -106,6 +106,11 @@ class ::SCategory < Sequel::Model(SDB[:categories]); end
 class ::SManufacturer < Sequel::Model(SDB[:manufacturers]); end
 class ::NewlineTest < Sequel::Model; end
 class ::QualifiedTableNameTest < Sequel::Model(Sequel.qualify(:public, :categories)); end
+dataset =
+  SDB[:items]
+    .left_join(:categories, { id: :category_id })
+    .select { Sequel[:items][:name] }
+class SComplexDataset < Sequel::Model(dataset); end
 
 # Abstract Base Class
 ABC = Class.new(Sequel::Model)

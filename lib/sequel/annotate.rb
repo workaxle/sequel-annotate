@@ -124,12 +124,12 @@ module Sequel
 
       cols.times do |i|
         rows.each do |r|
-          lengths[i] = r[i].length if r[i].length > lengths[i]
+          lengths[i] = r[i].length if r[i] && r[i].length > lengths[i]
         end
       end
 
       rows.map do |r|
-        "#  #{r.zip(lengths).map{|c, l| c.ljust(l).gsub("\n", "\n#    ")}.join(' | ')}".strip
+        "#  #{r.zip(lengths).map{|c, l| c.to_s.ljust(l).gsub("\n", "\n#    ")}.join(' | ')}".strip
       end
     end
 
