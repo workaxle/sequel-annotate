@@ -347,4 +347,10 @@ OUTPUT
     Sequel::Annotate.annotate(["spec/tmp/itm_unannotated.rb"], :namespace=>'ModelNamespace')
     File.read("spec/tmp/itm_unannotated.rb").must_equal fix_pg_comment(File.read('spec/namespaced/itm_annotated.rb'))
   end
+
+  it ".annotate #{desc} should handle :namespace => true option" do
+    FileUtils.cp('spec/namespaced/itm_unannotated.rb', 'spec/tmp')
+    Sequel::Annotate.annotate(["spec/tmp/itm_unannotated.rb"], namespace: true)
+    File.read("spec/tmp/itm_unannotated.rb").must_equal fix_pg_comment(File.read('spec/namespaced/itm_annotated.rb'))
+  end
 end

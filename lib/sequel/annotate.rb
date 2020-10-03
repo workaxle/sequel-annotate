@@ -17,11 +17,18 @@ module Sequel
 
         next if text.match(/^#\s+sequel-annotate:\s+false$/i)
 
-        if match = text.match(/class ([^\s<]+)\s*</)
+        name = nil
+        if namespace == true
+          constants = text.scan(/\bmodule ([^\s]+)|class ([^\s<]+)\s*</).flatten.compact
+          name = constants.join("::") if constants.any?
+        elsif match = text.match(/class ([^\s<]+)\s*</)
           name = match[1]
           if namespace
             name = "#{namespace}::#{name}"
           end
+        end
+
+        if name
           klass = name.constantize
           if klass.ancestors.include?(Sequel::Model)
             new(klass).annotate(path, options)
