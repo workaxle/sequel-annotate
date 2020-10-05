@@ -1,4 +1,4 @@
-=== master
+=== 1.6.0 (2020-10-05)
 
 * Add support for :namespace=>true option to attempt to automatically determine namespace (adam12) (#20)
 
