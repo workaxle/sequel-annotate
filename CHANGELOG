@@ -1,8 +1,10 @@
 === master
 
+* Add support for :namespace=>true option to attempt to automatically determine namespace (adam12) (#20)
+
 * Skip models that select from a subquery (adam12, jeremyevans) (#17)
 
-* Allow files ot be skipped with sequel-annotate: false magic comment (adam12) (#18)
+* Allow files to be skipped with sequel-annotate: false magic comment (adam12) (#18)
 
 * Ignore opening of singleton classes with class << when looking for models (adam12) (#16)
 
