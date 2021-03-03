@@ -19,6 +19,7 @@ task :default => :spec
 
 desc "Run specs in CI"
 task :spec_ci do
+  ENV['SEQUEL_ANNOTATE_SPEC_CI'] = '1'
   if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'jruby'
     ENV['SEQUEL_ANNOTATE_SPEC_POSTGRES_URL'] = "jdbc:postgresql://localhost/?user=postgres"
   else
