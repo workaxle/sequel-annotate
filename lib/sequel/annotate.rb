@@ -205,7 +205,7 @@ SQL
 
       unless options[:references] == false
         rows = model.db.fetch(<<SQL, :oid=>oid).all
-SELECT conname, conrelid::pg_catalog.regclass,
+SELECT conname, conrelid::pg_catalog.regclass::text,
   pg_catalog.pg_get_constraintdef(c.oid, true) as condef
 FROM pg_catalog.pg_constraint c
 WHERE c.confrelid = :oid AND c.contype = 'f' ORDER BY 2, 1;
@@ -238,7 +238,7 @@ SQL
 
     def _column_comments_postgres
       model.db.fetch(<<SQL, :oid=>model.db.send(:regclass_oid, model.table_name)).to_hash(:attname, :description)
-SELECT a.attname::text AS attname, d.description
+SELECT a.attname, d.description
 FROM pg_description d
 JOIN pg_attribute a ON (d.objoid = a.attrelid AND d.objsubid = a.attnum)
 WHERE d.objoid = :oid AND COALESCE(d.description, '') != '';
