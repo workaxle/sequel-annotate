@@ -1,6 +1,7 @@
 source 'http://rubygems.org'
 
 gem 'rake'
+gem 'sequel'
 gem 'minitest'
 gem 'minitest-global_expectations'
 
