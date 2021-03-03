@@ -1,0 +1,15 @@
+source 'http://rubygems.org'
+
+gem 'rake'
+gem 'minitest'
+gem 'minitest-global_expectations'
+
+platforms :ruby do
+  gem "sqlite3"
+  gem "pg"
+end
+
+platforms :jruby do
+  gem 'jdbc-sqlite3'
+  gem 'jdbc-postgres'
+end
