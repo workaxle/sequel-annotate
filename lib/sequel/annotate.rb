@@ -147,6 +147,7 @@ module Sequel
     # Use the standard columns schema output, but use PostgreSQL specific
     # code for additional schema information.
     def _schema_comment_postgres(output, options = {})
+      schema_comment_table_comment(output, options)
       schema_comment_columns(output, options)
       oid = model.db.send(:regclass_oid, model.table_name)
 
@@ -244,6 +245,12 @@ WHERE d.objoid = :oid AND COALESCE(d.description, '') != '';
 SQL
     end
 
+    def _table_comment_postgres
+      (model.db.fetch(<<SQL, :oid=>model.db.send(:regclass_oid, model.table_name)).first || {})[:comment]
+SELECT obj_description(CAST(:oid AS regclass), 'pg_class') AS "comment" LIMIT 1;
+SQL
+    end
+
     # The standard column schema information to output.
     def schema_comment_columns(output, options = {})
       if cpk = model.primary_key.is_a?(Array)
@@ -269,6 +276,18 @@ SQL
         parts
       end
       output.concat(align(rows))
+    end
+
+    # The standard table comment to output if the database supports it.
+    # On PostgreSQL, the comment set via COMMENT ON TABLE; is output.
+    # For all other databases, nothing is output.
+    def schema_comment_table_comment(output, options = {})
+      meth = :"_table_comment_#{model.db.database_type}"
+      table_comment = if options[:comments] != false && respond_to?(meth, true)
+        send(meth)
+      end
+
+      output.concat(align([[table_comment]])) if table_comment
     end
 
     # The standard index information to output.
