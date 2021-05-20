@@ -1,4 +1,4 @@
-=== master
+=== 1.7.0 (2021-05-20)
 
 * Add support for table comments on PostgreSQL (TSMMark) (#21)
 
