@@ -131,6 +131,13 @@ describe Sequel::Annotate do
     comment
   end
 
+  def fix_sqlite_comment(comment)
+    if SDB.sqlite_version >= 33700
+      comment = comment.gsub('INTEGER', 'integer')
+    end
+    comment
+  end
+
   before do
     Dir.mkdir('spec/tmp') unless File.directory?('spec/tmp')
   end
@@ -246,7 +253,7 @@ OUTPUT
 #    END)
 OUTPUT
 
-    Sequel::Annotate.new(SItem).schema_comment.must_equal((<<OUTPUT).chomp)
+    fix_sqlite_comment(Sequel::Annotate.new(SItem).schema_comment).must_equal((<<OUTPUT).chomp)
 # Table: items
 # Columns:
 #  id                    | integer          | PRIMARY KEY AUTOINCREMENT
@@ -264,7 +271,7 @@ OUTPUT
 #  (manufacturer_name, manufacturer_location) REFERENCES manufacturers
 OUTPUT
 
-    Sequel::Annotate.new(SCategory).schema_comment.must_equal((<<OUTPUT).chomp)
+    fix_sqlite_comment(Sequel::Annotate.new(SCategory).schema_comment).must_equal((<<OUTPUT).chomp)
 # Table: categories
 # Columns:
 #  id   | integer      | PRIMARY KEY AUTOINCREMENT
@@ -273,7 +280,7 @@ OUTPUT
 #  categories_name_key | UNIQUE (name)
 OUTPUT
 
-    Sequel::Annotate.new(SManufacturer).schema_comment.must_equal((<<OUTPUT).chomp)
+    fix_sqlite_comment(Sequel::Annotate.new(SManufacturer).schema_comment).must_equal((<<OUTPUT).chomp)
 # Table: manufacturers
 # Primary Key: (name, location)
 # Columns:
@@ -322,8 +329,11 @@ OUTPUT
         2.times do
           Sequel::Annotate.new(model).annotate("spec/tmp/#{filename}.rb", *args)
           expected = File.read("spec/annotated_#{pos}/#{filename}.rb")
-          expected = fix_pg_comment(expected) if model.db == DB
-          File.read("spec/tmp/#{filename}.rb").must_equal expected
+          if model.db == DB
+            File.read("spec/tmp/#{filename}.rb").must_equal fix_pg_comment(expected)
+          else
+            fix_sqlite_comment(File.read("spec/tmp/#{filename}.rb")).must_equal expected
+          end
         end
       end
     end
@@ -336,8 +346,11 @@ OUTPUT
         [Item, Category, Manufacturer, SItem, SCategory, SManufacturer, SItemWithFrozenLiteral, SItemWithCoding, SItemWithEncoding, SItemWithWarnIndent, SItemWithWarnPastScope, SComplexDataset].each do |model|
           filename = model.name.downcase
           expected = File.read("spec/annotated_#{pos}/#{filename}.rb")
-          expected = fix_pg_comment(expected) if model.db == DB
-          File.read("spec/tmp/#{filename}.rb").must_equal expected
+          if model.db == DB
+            File.read("spec/tmp/#{filename}.rb").must_equal fix_pg_comment(expected)
+          else
+            fix_sqlite_comment(File.read("spec/tmp/#{filename}.rb")).must_equal expected
+          end
         end
       end
     end
