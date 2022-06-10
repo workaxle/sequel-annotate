@@ -1,0 +1,1 @@
+NoClass = Class.new

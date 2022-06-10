@@ -53,7 +53,7 @@ module Sequel
       orig = current = File.read(path).rstrip
 
       if options[:position] == :before
-        if current =~ /\A((?:^\s*$|^#\s*(?:frozen_string_literal|coding|encoding|warn_indent|warn_past_scope)[^\n]*\s*)*)/m
+        if (current =~ /\A((?:^\s*$|^#\s*(?:frozen_string_literal|coding|encoding|warn_indent|warn_past_scope)[^\n]*\s*)*)/m) && !$1.empty?
           magic_comments = $1
           current.slice!(0, magic_comments.length)
         end

@@ -17,6 +17,13 @@ end
 
 task :default => :spec
 
+desc "Run specs with coverage"
+task :spec_cov do
+  ENV["COVERAGE"] = "1"
+  Rake::Task['spec'].invoke
+  ENV.delete('COVERAGE')
+end
+
 desc "Run specs in CI"
 task :spec_ci do
   ENV['SEQUEL_ANNOTATE_SPEC_CI'] = '1'
