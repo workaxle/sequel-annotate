@@ -1,9 +1,14 @@
 source 'http://rubygems.org'
 
 gem 'rake'
-gem 'sequel'
 gem 'minitest'
 gem 'minitest-global_expectations'
+
+if RUBY_VERSION < '2.0'
+  gem 'sequel', '< 5.72'
+else
+  gem 'sequel'
+end
 
 platforms :ruby do
   gem "sqlite3"
