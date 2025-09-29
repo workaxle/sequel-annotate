@@ -35,7 +35,7 @@ migration_tasks.each do |task|
 end
 
 module Sequel
-  module Annotate
+  class Annotate
     class Migration
       @@working = false
 
