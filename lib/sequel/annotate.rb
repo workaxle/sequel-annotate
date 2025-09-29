@@ -61,15 +61,9 @@ module Sequel
 
       return unless model_class && model_class.ancestors.include?(Sequel::Model)
 
-      # Ensure the model uses the correct database
-      original_db = model_class.db if model_class.respond_to?(:db)
-      model_class.db = db if db
-
-      begin
-        new(model_class).annotate(path, options)
-      ensure
-        model_class.db = original_db if original_db
-      end
+      # Models already have their database set, just use them directly
+      # The db parameter is mainly for verification that models are loaded
+      new(model_class).annotate(path, options)
     end
 
     # Find the model class from file content
