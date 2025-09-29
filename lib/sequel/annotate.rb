@@ -1,14 +1,114 @@
 require 'sequel'
 
+# Auto-load railtie if Rails is defined
+if defined?(Rails)
+  require 'sequel/annotate/railtie'
+end
+
 module Sequel
   class Annotate
+    VERSION = '1.7.1'
+    # Annotate models directly with a database connection
+    # This method is used by the rake tasks and auto-annotation
+    def self.annotate(db_or_paths, options = {})
+      if db_or_paths.is_a?(Sequel::Database)
+        annotate_models(db_or_paths, options)
+      else
+        # Legacy behavior - paths provided
+        annotate_files(db_or_paths, options)
+      end
+    end
+
+    # Annotate all models connected to the given database
+    def self.annotate_models(db, options = {})
+      Sequel.extension :inflector
+
+      model_paths = options[:model_paths] || ['app/models']
+      exclude = Array(options[:exclude])
+      include_only = Array(options[:include])
+
+      model_files = model_paths.flat_map do |path|
+        Dir.glob(File.join(path, '**', '*.rb'))
+      end
+
+      model_files.each do |file|
+        annotate_file(file, db, options) unless should_skip_file?(file, exclude, include_only)
+      end
+    end
+
+    # Check if a file should be skipped based on exclude/include options
+    def self.should_skip_file?(file, exclude, include_only)
+      basename = File.basename(file, '.rb')
+
+      if include_only.any?
+        !include_only.include?(basename)
+      elsif exclude.any?
+        exclude.include?(basename)
+      else
+        false
+      end
+    end
+
+    # Annotate a single file
+    def self.annotate_file(path, db, options = {})
+      text = File.read(path)
+
+      # Skip if file has sequel-annotate: false comment
+      return if text.match(/^#\s+sequel-annotate:\s+false$/i)
+
+      # Try to find the model class
+      model_class = find_model_class(text, path, options[:namespace])
+
+      return unless model_class && model_class.ancestors.include?(Sequel::Model)
+
+      # Ensure the model uses the correct database
+      original_db = model_class.db if model_class.respond_to?(:db)
+      model_class.db = db if db
+
+      begin
+        new(model_class).annotate(path, options)
+      ensure
+        model_class.db = original_db if original_db
+      end
+    end
+
+    # Find the model class from file content
+    def self.find_model_class(text, path, namespace_option)
+      name = nil
+
+      if namespace_option == true
+        constants = text.scan(/\bmodule ([^\s]+)|class ([^\s<]+)\s*</).flatten.compact
+        name = constants.join("::") if constants.any?
+      elsif match = text.match(/class ([^\s<]+)\s*</)
+        name = match[1]
+        if namespace_option
+          name = "#{namespace_option}::#{name}"
+        end
+      end
+
+      return nil unless name
+
+      begin
+        name.constantize
+      rescue NameError
+        # Try to load the file if the constant isn't defined
+        begin
+          require path
+          name.constantize
+        rescue
+          nil
+        end
+      end
+    end
+
+    # Legacy method - annotate files by path
     # Append/replace the schema comment for all of the given files.
     # Attempts to guess the model for each file using a regexp match of
     # the file's content, if this doesn't work, you'll need to create
     # an instance manually and pass in the model and path. Example:
     #
     #   Sequel::Annotate.annotate(Dir['models/*.rb'])
-    def self.annotate(paths, options = {})
+    def self.annotate_files(paths, options = {})
       Sequel.extension :inflector
       namespace = options[:namespace]
 

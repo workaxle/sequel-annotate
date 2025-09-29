@@ -1,0 +1,30 @@
+# Configuration for sequel-annotate gem
+# This file controls how models are annotated after migrations
+
+# Position of annotations (before or after class definition)
+position: before
+
+# Models to exclude from annotation (array of model names)
+exclude: []
+
+# Models to include for annotation (if specified, only these will be annotated)
+include: []
+
+# Add RuboCop directives for long lines
+rubocop: true
+
+# Add border around annotations
+border: false
+
+# Namespace for models (if your models are in a namespace)
+namespace: ~
+
+# Additional model paths to check
+model_paths:
+  - app/models
+
+# Skip annotation on migrations (can be overridden with SKIP_ANNOTATIONS=true)
+skip_on_migrate: false
+
+# Show verbose output during annotation
+verbose: false
