@@ -3,7 +3,7 @@
 require 'rails/railtie'
 
 module Sequel
-  module Annotate
+  class Annotate
     class Railtie < Rails::Railtie
       railtie_name :sequel_annotate
 
