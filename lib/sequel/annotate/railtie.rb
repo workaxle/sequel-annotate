@@ -8,7 +8,7 @@ module Sequel
       railtie_name :sequel_annotate
 
       rake_tasks do
-        load File.expand_path('../tasks/sequel_annotate_migrate.rake', __dir__)
+        load File.expand_path('../../tasks/sequel_annotate_migrate.rake', __dir__)
       end
 
       generators do

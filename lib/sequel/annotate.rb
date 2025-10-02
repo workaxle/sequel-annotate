@@ -365,7 +365,21 @@ SQL
         {}
       end
 
-      rows = model.columns.map do |col|
+      # Get columns in the desired order
+      columns = if options[:sort]
+        # Sort columns alphabetically, but keep 'id' first
+        sorted = model.columns.sort_by(&:to_s)
+        if sorted.include?(:id)
+          sorted.delete(:id)
+          [:id] + sorted
+        else
+          sorted
+        end
+      else
+        model.columns
+      end
+
+      rows = columns.map do |col|
         sch = model.db_schema[col]
         parts = [
           col.to_s,
