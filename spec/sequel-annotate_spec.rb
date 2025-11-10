@@ -117,6 +117,9 @@ class ::Manufacturer < Sequel::Model; end
 class ::DomainTest < Sequel::Model; end
 class ::CommentTest < Sequel::Model; end
 class ::FkTest < Sequel::Model; end
+class ::LazyTest < Sequel::Model(:manufacturers)
+  plugin :lazy_attributes, :name
+end
 class ::SItem < Sequel::Model(SDB[:items]); end
 class ::SItemWithFrozenLiteral < Sequel::Model(SDB[:items]); end
 class ::SItemWithCoding < Sequel::Model(SDB[:items]); end
@@ -402,8 +405,20 @@ OUTPUT
 # Foreign key constraints:
 #  (c) REFERENCES fk_tests(b)
 OUTPUT
+
+    Sequel::Annotate.new(LazyTest).schema_comment.must_equal(fix_pg_comment((<<OUTPUT).chomp))
+# Table: manufacturers
+# Primary Key: (name, location)
+# Columns:
+#  name     | text |
+#  location | text |
+# Indexes:
+#  manufacturers_pkey | PRIMARY KEY btree (name, location)
+# Referenced By:
+#  items | items_manufacturer_name_fkey | (manufacturer_name, manufacturer_location) REFERENCES manufacturers(name, location)
+OUTPUT
   end
-  
+
   it "#annotate should append the schema comment if current schema comment is not at the end of the file" do
     FileUtils.cp('spec/unannotated/sitemwithcoding.rb', 'spec/tmp')
     Sequel::Annotate.new(SItemWithCoding).annotate("spec/tmp/sitemwithcoding.rb", :position=>:before)

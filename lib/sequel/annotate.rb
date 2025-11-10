@@ -6,7 +6,7 @@ module Sequel
     # Attempts to guess the model for each file using a regexp match of
     # the file's content, if this doesn't work, you'll need to create
     # an instance manually and pass in the model and path. Example:
-    # 
+    #
     #   Sequel::Annotate.annotate(Dir['models/*.rb'])
     def self.annotate(paths, options = {})
       Sequel.extension :inflector
@@ -80,7 +80,7 @@ module Sequel
       end
     end
 
-    # The schema comment to use for this model.  
+    # The schema comment to use for this model.
     # For all databases, includes columns, indexes, and foreign
     # key constraints in this table referencing other tables.
     # On PostgreSQL, also includes check constraints, triggers,
@@ -271,7 +271,10 @@ SQL
         {}
       end
 
-      rows = model.columns.map do |col|
+      show_hidden_columns = defined?(Sequel::Plugins::LazyAttributes) &&
+                            model.plugins.include?(Sequel::Plugins::LazyAttributes)
+      columns = show_hidden_columns ? model.select_all.columns : model.columns
+      rows = columns.map do |col|
         sch = model.db_schema[col]
         parts = [
           col.to_s,
