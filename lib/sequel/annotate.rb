@@ -58,7 +58,8 @@ module Sequel
           current.slice!(0, magic_comments.length)
         end
 
-        current = current.gsub(/\A#\sTable[^\n\r]+\r?\n(?:#[^\n\r]*\r?\n)*/m, '').lstrip
+        # Remove existing annotations, including rubocop directives if present
+        current = current.gsub(/\A(?:#\s*rubocop:disable[^\n\r]*\r?\n)?#\sTable[^\n\r]+\r?\n(?:#[^\n\r]*\r?\n)*(?:#\s*rubocop:enable[^\n\r]*\r?\n)?/m, '').lstrip
         current = "#{magic_comments}#{schema_comment(options)}#{$/}#{$/}#{current}"
       else
         if m = current.reverse.match(/#{"#{$/}# Table: ".reverse}/m)
@@ -90,6 +91,9 @@ module Sequel
     # :border :: Include a border above and below the comment.
     # :indexes :: Do not include indexes in annotation if set to +false+.
     # :foreign_keys :: Do not include foreign key constraints in annotation if set to +false+.
+    # :disable_rubocop :: Wrap the annotation with rubocop disable/enable comments for Layout/LineLength if set to +true+
+    #                     and any annotation lines exceed 120 characters.
+    # :sort :: Sort columns alphabetically if set to +true+, with +:id+ column always appearing first.
     #
     # PostgreSQL-specific options:
     # :constraints :: Do not include check constraints if set to +false+.
@@ -117,6 +121,17 @@ module Sequel
         border = "# #{'-' * (output.map(&:size).max - 2)}"
         output.push(border)
         output.insert(1, border)
+      end
+
+      # Add rubocop disable/enable comments if specified and lines are too long
+      if options[:disable_rubocop]
+        # Check if any line in the output exceeds 120 characters
+        has_long_lines = output.any? { |line| line.length > 120 }
+
+        if has_long_lines
+          output.unshift("# rubocop:disable Layout/LineLength")
+          output.push("# rubocop:enable Layout/LineLength")
+        end
       end
 
       output.join($/)
@@ -271,9 +286,24 @@ SQL
         {}
       end
 
+      # Get all columns including lazy attributes if applicable
       show_hidden_columns = defined?(Sequel::Plugins::LazyAttributes) &&
                             model.plugins.include?(Sequel::Plugins::LazyAttributes)
-      columns = show_hidden_columns ? model.select_all.columns : model.columns
+      all_columns = show_hidden_columns ? model.select_all.columns : model.columns
+
+      # Get columns in the desired order
+      columns = if options[:sort]
+        # Sort columns alphabetically, but keep 'id' first
+        sorted = all_columns.sort_by(&:to_s)
+        if sorted.include?(:id)
+          sorted.delete(:id)
+          [:id] + sorted
+        else
+          sorted
+        end
+      else
+        all_columns
+      end
       rows = columns.map do |col|
         sch = model.db_schema[col]
         parts = [
